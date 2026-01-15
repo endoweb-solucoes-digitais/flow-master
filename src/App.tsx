@@ -9,6 +9,7 @@ import StepsPage from "./pages/StepsPage";
 import FlowDetailPage from "./pages/FlowDetailPage";
 import SearchPage from "./pages/SearchPage";
 import ConfigPage from "./pages/ConfigPage";
+import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/" element={<Index />} />
           <Route path="/flows" element={<FlowsPage />} />
           <Route path="/etapas" element={<StepsPage />} />
