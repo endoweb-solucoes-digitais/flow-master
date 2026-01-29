@@ -99,8 +99,14 @@ const mockTimeline: TimelineStep[] = [
   {
     id: 3,
     name: "Validação do RH",
-    status: "current",
+    status: "completed",
+    completedAt: "07/01/2026 09:20",
+    completedBy: "Ana Paula Ferreira",
     isApprovalStep: true,
+    approvalData: {
+      approved: false,
+      observation: "Não aprovado. O colaborador não possui saldo de férias suficiente para o período solicitado. Favor verificar o extrato atualizado e submeter nova solicitação com período adequado ao saldo disponível (máximo 10 dias).",
+    },
   },
   {
     id: 4,
