@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   ArrowLeft,
   Calendar,
@@ -21,6 +22,10 @@ import {
   ChevronUp,
   Download,
   Paperclip,
+  ThumbsUp,
+  ThumbsDown,
+  ShieldCheck,
+  XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +33,11 @@ interface FormFieldData {
   label: string;
   value: string;
   type: "text" | "date" | "file" | "select" | "textarea";
+}
+
+interface ApprovalData {
+  approved: boolean;
+  observation?: string;
 }
 
 interface TimelineStep {
@@ -39,6 +49,7 @@ interface TimelineStep {
   isFormStep?: boolean;
   isApprovalStep?: boolean;
   formData?: FormFieldData[];
+  approvalData?: ApprovalData;
 }
 
 const mockFlow = {
@@ -76,17 +87,29 @@ const mockTimeline: TimelineStep[] = [
   {
     id: 2,
     name: "Aprovação do Gestor",
-    status: "overdue",
+    status: "completed",
+    completedAt: "06/01/2026 14:45",
+    completedBy: "Carlos Oliveira",
     isApprovalStep: true,
+    approvalData: {
+      approved: true,
+      observation: "Aprovado. Período solicitado não conflita com entregas do projeto.",
+    },
   },
   {
     id: 3,
     name: "Validação do RH",
-    status: "pending",
+    status: "current",
     isApprovalStep: true,
   },
   {
     id: 4,
+    name: "Aprovação Diretoria",
+    status: "pending",
+    isApprovalStep: true,
+  },
+  {
+    id: 5,
     name: "Conclusão",
     status: "pending",
   },
@@ -278,12 +301,14 @@ export default function FlowDetailPage() {
                       }
                     />
                     {currentStep.isApprovalStep && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5 text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-1 rounded-full font-medium">
+                        <ShieldCheck className="w-3.5 h-3.5" />
                         Etapa de Aprovação
                       </span>
                     )}
                     {currentStep.isFormStep && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-1 rounded-full font-medium">
+                        <FileText className="w-3.5 h-3.5" />
                         Etapa de Formulário
                       </span>
                     )}
@@ -291,12 +316,24 @@ export default function FlowDetailPage() {
                 </div>
               </div>
 
-              {/* Form/Approval Content */}
+              {/* Approval Form - Enhanced UI */}
               {currentStep.isApprovalStep && currentStep.status !== "completed" && (
                 <div className="space-y-6">
+                  {/* Approval header */}
+                  <div className="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <ShieldCheck className="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-foreground">Aguardando sua decisão</p>
+                      <p className="text-sm text-muted-foreground">
+                        Analise os dados abaixo e informe sua aprovação ou reprovação
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Previous data display */}
                   <div className="bg-muted/50 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-foreground mb-3">
+                    <h3 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
                       Dados da Solicitação
                     </h3>
                     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -321,26 +358,57 @@ export default function FlowDetailPage() {
                     </dl>
                   </div>
 
-                  {/* Observation field for rejection */}
+                  {/* Approval decision */}
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold">Sua Decisão</Label>
+                    <RadioGroup defaultValue="approve" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Label
+                        htmlFor="approve"
+                        className="flex items-center gap-3 p-4 rounded-lg border-2 border-status-success/30 bg-status-success-light cursor-pointer hover:border-status-success transition-colors [&:has([data-state=checked])]:border-status-success [&:has([data-state=checked])]:ring-2 [&:has([data-state=checked])]:ring-status-success/20"
+                      >
+                        <RadioGroupItem value="approve" id="approve" className="sr-only" />
+                        <ThumbsUp className="w-6 h-6 text-status-success" />
+                        <div>
+                          <p className="font-semibold text-foreground">Aprovar</p>
+                          <p className="text-xs text-muted-foreground">Concordo com a solicitação</p>
+                        </div>
+                      </Label>
+                      <Label
+                        htmlFor="reject"
+                        className="flex items-center gap-3 p-4 rounded-lg border-2 border-status-danger/30 bg-status-danger-light cursor-pointer hover:border-status-danger transition-colors [&:has([data-state=checked])]:border-status-danger [&:has([data-state=checked])]:ring-2 [&:has([data-state=checked])]:ring-status-danger/20"
+                      >
+                        <RadioGroupItem value="reject" id="reject" className="sr-only" />
+                        <ThumbsDown className="w-6 h-6 text-status-danger" />
+                        <div>
+                          <p className="font-semibold text-foreground">Não Aprovar</p>
+                          <p className="text-xs text-muted-foreground">Tenho ressalvas ou discordo</p>
+                        </div>
+                      </Label>
+                    </RadioGroup>
+                  </div>
+
+                  {/* Observation field */}
                   <div className="space-y-2">
                     <Label htmlFor="observation">
-                      Observação (obrigatório em caso de não aprovação)
+                      Observação
+                      <span className="text-muted-foreground font-normal ml-1">
+                        (obrigatória em caso de não aprovação)
+                      </span>
                     </Label>
                     <Textarea
                       id="observation"
-                      placeholder="Adicione uma observação se necessário..."
-                      rows={3}
+                      placeholder="Justifique sua decisão ou adicione comentários relevantes..."
+                      rows={4}
+                      className="resize-none"
                     />
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex items-center gap-3 pt-4 border-t border-border">
-                    <Button variant="destructive" className="flex-1 sm:flex-none">
-                      Não Aprovar
-                    </Button>
-                    <Button className="flex-1 sm:flex-none">
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+                    <Button variant="outline">Retornar Etapa</Button>
+                    <Button className="min-w-[140px]">
                       <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Aprovar
+                      Confirmar Decisão
                     </Button>
                   </div>
                 </div>
@@ -378,63 +446,128 @@ export default function FlowDetailPage() {
 
               {currentStep.status === "completed" && (
                 <div className="space-y-6">
-                  {/* Completion badge */}
-                  <div className="flex items-center gap-3 p-4 bg-status-success-light rounded-lg border border-status-success/20">
-                    <CheckCircle2 className="w-6 h-6 text-status-success flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-foreground">Etapa concluída</p>
-                      <p className="text-sm text-muted-foreground">
-                        Por {currentStep.completedBy} em {currentStep.completedAt}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Form data display */}
-                  {currentStep.formData && currentStep.formData.length > 0 && (
-                    <div className="space-y-4">
-                      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                        <FileText className="w-4 h-4" />
-                        Informações Preenchidas
-                      </h3>
-                      <div className="bg-muted/30 rounded-lg border border-border overflow-hidden">
-                        <dl className="divide-y divide-border">
-                          {currentStep.formData.map((field, index) => (
-                            <div
-                              key={index}
-                              className={cn(
-                                "px-4 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4",
-                                index % 2 === 0 ? "bg-transparent" : "bg-muted/20"
-                              )}
-                            >
-                              <dt className="text-sm text-muted-foreground font-medium">
-                                {field.label}
-                              </dt>
-                              <dd className="text-sm text-foreground sm:col-span-2">
-                                {field.type === "file" ? (
-                                  <button className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors group">
-                                    <Paperclip className="w-4 h-4" />
-                                    <span className="underline underline-offset-2">
-                                      {field.value}
-                                    </span>
-                                    <Download className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                  </button>
-                                ) : field.type === "textarea" ? (
-                                  <p className="whitespace-pre-wrap">{field.value}</p>
-                                ) : (
-                                  <span className="font-medium">{field.value}</span>
-                                )}
-                              </dd>
-                            </div>
-                          ))}
-                        </dl>
+                  {/* Approval step completed - show approval result */}
+                  {currentStep.isApprovalStep && currentStep.approvalData && (
+                    <>
+                      {/* Approval result badge */}
+                      <div
+                        className={cn(
+                          "flex items-center gap-3 p-4 rounded-lg border",
+                          currentStep.approvalData.approved
+                            ? "bg-status-success-light border-status-success/20"
+                            : "bg-status-danger-light border-status-danger/20"
+                        )}
+                      >
+                        {currentStep.approvalData.approved ? (
+                          <ThumbsUp className="w-6 h-6 text-status-success flex-shrink-0" />
+                        ) : (
+                          <ThumbsDown className="w-6 h-6 text-status-danger flex-shrink-0" />
+                        )}
+                        <div className="flex-1">
+                          <p className="font-medium text-foreground">
+                            {currentStep.approvalData.approved ? "Aprovado" : "Não Aprovado"}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Por {currentStep.completedBy} em {currentStep.completedAt}
+                          </p>
+                        </div>
+                        <div
+                          className={cn(
+                            "px-3 py-1 rounded-full text-xs font-semibold",
+                            currentStep.approvalData.approved
+                              ? "bg-status-success/20 text-status-success"
+                              : "bg-status-danger/20 text-status-danger"
+                          )}
+                        >
+                          {currentStep.approvalData.approved ? "APROVADO" : "REPROVADO"}
+                        </div>
                       </div>
-                    </div>
+
+                      {/* Observation if present */}
+                      {currentStep.approvalData.observation && (
+                        <div className="space-y-2">
+                          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4" />
+                            Observação do Aprovador
+                          </h3>
+                          <div className="bg-muted/30 rounded-lg border border-border p-4">
+                            <p className="text-sm text-foreground whitespace-pre-wrap">
+                              {currentStep.approvalData.observation}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
 
-                  {/* If no form data, show simple completion message */}
-                  {(!currentStep.formData || currentStep.formData.length === 0) && (
-                    <div className="text-center py-4 text-muted-foreground">
-                      <p className="text-sm">Nenhum dado de formulário registrado para esta etapa.</p>
+                  {/* Form step completed - show form data */}
+                  {currentStep.isFormStep && (
+                    <>
+                      {/* Completion badge */}
+                      <div className="flex items-center gap-3 p-4 bg-status-success-light rounded-lg border border-status-success/20">
+                        <CheckCircle2 className="w-6 h-6 text-status-success flex-shrink-0" />
+                        <div>
+                          <p className="font-medium text-foreground">Etapa concluída</p>
+                          <p className="text-sm text-muted-foreground">
+                            Por {currentStep.completedBy} em {currentStep.completedAt}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Form data display */}
+                      {currentStep.formData && currentStep.formData.length > 0 && (
+                        <div className="space-y-4">
+                          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Informações Preenchidas
+                          </h3>
+                          <div className="bg-muted/30 rounded-lg border border-border overflow-hidden">
+                            <dl className="divide-y divide-border">
+                              {currentStep.formData.map((field, index) => (
+                                <div
+                                  key={index}
+                                  className={cn(
+                                    "px-4 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4",
+                                    index % 2 === 0 ? "bg-transparent" : "bg-muted/20"
+                                  )}
+                                >
+                                  <dt className="text-sm text-muted-foreground font-medium">
+                                    {field.label}
+                                  </dt>
+                                  <dd className="text-sm text-foreground sm:col-span-2">
+                                    {field.type === "file" ? (
+                                      <button className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors group">
+                                        <Paperclip className="w-4 h-4" />
+                                        <span className="underline underline-offset-2">
+                                          {field.value}
+                                        </span>
+                                        <Download className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                      </button>
+                                    ) : field.type === "textarea" ? (
+                                      <p className="whitespace-pre-wrap">{field.value}</p>
+                                    ) : (
+                                      <span className="font-medium">{field.value}</span>
+                                    )}
+                                  </dd>
+                                </div>
+                              ))}
+                            </dl>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Generic completion (no form, no approval) */}
+                  {!currentStep.isFormStep && !currentStep.isApprovalStep && (
+                    <div className="flex items-center gap-3 p-4 bg-status-success-light rounded-lg border border-status-success/20">
+                      <CheckCircle2 className="w-6 h-6 text-status-success flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-foreground">Etapa concluída</p>
+                        <p className="text-sm text-muted-foreground">
+                          Por {currentStep.completedBy} em {currentStep.completedAt}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
