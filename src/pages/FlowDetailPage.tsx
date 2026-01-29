@@ -19,8 +19,16 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  Download,
+  Paperclip,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+interface FormFieldData {
+  label: string;
+  value: string;
+  type: "text" | "date" | "file" | "select" | "textarea";
+}
 
 interface TimelineStep {
   id: number;
@@ -30,6 +38,7 @@ interface TimelineStep {
   completedBy?: string;
   isFormStep?: boolean;
   isApprovalStep?: boolean;
+  formData?: FormFieldData[];
 }
 
 const mockFlow = {
@@ -51,6 +60,18 @@ const mockTimeline: TimelineStep[] = [
     completedAt: "05/01/2026 10:30",
     completedBy: "Maria Santos",
     isFormStep: true,
+    formData: [
+      { label: "Nome do Colaborador", value: "Maria Santos", type: "text" },
+      { label: "Filial", value: "São Paulo - Matriz", type: "select" },
+      { label: "Departamento", value: "Recursos Humanos", type: "select" },
+      { label: "Cargo", value: "Analista de RH Sênior", type: "text" },
+      { label: "Data Início das Férias", value: "15/02/2026", type: "date" },
+      { label: "Data Fim das Férias", value: "01/03/2026", type: "date" },
+      { label: "Quantidade de Dias", value: "15 dias úteis", type: "text" },
+      { label: "Tipo de Férias", value: "Férias Regulares", type: "select" },
+      { label: "Observações", value: "Viagem programada com a família. Estarei indisponível por telefone entre os dias 20/02 e 25/02.", type: "textarea" },
+      { label: "Comprovante de Saldo", value: "comprovante_saldo_ferias.pdf", type: "file" },
+    ],
   },
   {
     id: 2,
@@ -356,10 +377,66 @@ export default function FlowDetailPage() {
               )}
 
               {currentStep.status === "completed" && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-status-success" />
-                  <p>Esta etapa foi concluída por {currentStep.completedBy}</p>
-                  <p className="text-sm">{currentStep.completedAt}</p>
+                <div className="space-y-6">
+                  {/* Completion badge */}
+                  <div className="flex items-center gap-3 p-4 bg-status-success-light rounded-lg border border-status-success/20">
+                    <CheckCircle2 className="w-6 h-6 text-status-success flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-foreground">Etapa concluída</p>
+                      <p className="text-sm text-muted-foreground">
+                        Por {currentStep.completedBy} em {currentStep.completedAt}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Form data display */}
+                  {currentStep.formData && currentStep.formData.length > 0 && (
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        Informações Preenchidas
+                      </h3>
+                      <div className="bg-muted/30 rounded-lg border border-border overflow-hidden">
+                        <dl className="divide-y divide-border">
+                          {currentStep.formData.map((field, index) => (
+                            <div
+                              key={index}
+                              className={cn(
+                                "px-4 py-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4",
+                                index % 2 === 0 ? "bg-transparent" : "bg-muted/20"
+                              )}
+                            >
+                              <dt className="text-sm text-muted-foreground font-medium">
+                                {field.label}
+                              </dt>
+                              <dd className="text-sm text-foreground sm:col-span-2">
+                                {field.type === "file" ? (
+                                  <button className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors group">
+                                    <Paperclip className="w-4 h-4" />
+                                    <span className="underline underline-offset-2">
+                                      {field.value}
+                                    </span>
+                                    <Download className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  </button>
+                                ) : field.type === "textarea" ? (
+                                  <p className="whitespace-pre-wrap">{field.value}</p>
+                                ) : (
+                                  <span className="font-medium">{field.value}</span>
+                                )}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* If no form data, show simple completion message */}
+                  {(!currentStep.formData || currentStep.formData.length === 0) && (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <p className="text-sm">Nenhum dado de formulário registrado para esta etapa.</p>
+                    </div>
+                  )}
                 </div>
               )}
 
